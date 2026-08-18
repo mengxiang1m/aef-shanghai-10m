@@ -37,7 +37,8 @@ Stage-2 checkpoint at epoch 2 and completed epoch 100 with batch size 32. The lo
 reconstruction loss was 0.242062 at epoch 58. Frozen-encoder downstream probes then trained for 50
 epochs; the selected downstream checkpoint is epoch 43.
 
-- Pretrained representation: `artifacts/pretrain_dm02/best.pt`
+- Pretrained representation: `aef_shanghai_pretrain_best.pt` from the
+  [v1.0.0 release](https://github.com/mengxiang1m/aef-shanghai-10m/releases/tag/v1.0.0)
 - Downstream probes: `artifacts/downstream_dm02/best.pt`
 - Full test metrics: `artifacts/downstream_dm02/test_metrics.json`
 

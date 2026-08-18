@@ -113,12 +113,21 @@ python tools/export_init_model.py --config configs/shanghai_10m.yaml
 `artifacts/aef_lite_init.pt` is randomly initialized and must not be treated as a trained model.
 Real `best.pt` weights require the six Shanghai rasters and actual training.
 
-The recommended trained representation is `artifacts/pretrain_dm02/best.pt`; its frozen-encoder
-downstream probe is `artifacts/downstream_dm02/best.pt`, with full spatial test metrics in
+The recommended trained representation is distributed with the
+[v1.0.0 GitHub release](https://github.com/mengxiang1m/aef-shanghai-10m/releases/tag/v1.0.0);
+its frozen-encoder downstream probe is `artifacts/downstream_dm02/best.pt`, with full spatial test metrics in
 `artifacts/downstream_dm02/test_metrics.json`. These completed 100 pretraining epochs and 50
 downstream epochs on a Tesla V100S. The earlier `pretrain_cpu_stage2` and
 `downstream_cpu_stage2_balanced` files are retained as diagnostic CPU-stage checkpoints. See
 `MODEL_CARD.md` for scope, limitations, checksums, and final metrics.
+
+Because this environment's HTTPS connection aborts on a single 10 MB upload, the release stores the
+pretraining checkpoint as numbered 2 MB parts. Download every
+`aef_shanghai_pretrain_best.pt.partNNN` asset into one directory, then reconstruct and verify it with:
+
+```powershell
+.\tools\reassemble_pretrain_checkpoint.ps1 -PartsDirectory .
+```
 
 ## Important interpretation notes
 
