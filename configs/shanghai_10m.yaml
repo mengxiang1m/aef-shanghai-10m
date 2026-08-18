@@ -1,0 +1,96 @@
+seed: 42
+
+data:
+  root: ../data/shanghai_10m
+  stats_file: ../artifacts/shanghai_stats.json
+  patch_size: 128
+  stride: 128
+  split_block_size: 1024
+  split_ratios: [0.70, 0.15, 0.15]
+  num_workers: 0
+  layers:
+    s2:
+      path: S2.tif
+      channels: 4
+      role: input_target
+      transform: log1p
+      normalization: standard
+      loss: l1
+      shift_pixels: 2
+      weight: 1.0
+    s1:
+      path: S1.tif
+      channels: 3
+      role: input_target
+      transform: identity
+      normalization: standard
+      loss: l1
+      shift_pixels: 2
+      weight: 1.0
+    building:
+      path: building.tif
+      channels: 1
+      role: target
+      transform: identity
+      normalization: none
+      loss: balanced_bce
+      weight: 1.0
+    lst:
+      path: LST.tif
+      channels: 1
+      role: target
+      transform: identity
+      normalization: standard
+      loss: l1
+      regrid_pixels: 100
+      weight: 1.0
+    dem:
+      path: DEM.tif
+      channels: 1
+      role: target
+      transform: identity
+      normalization: standard
+      loss: l1
+      weight: 1.0
+    ndvi:
+      path: NDVI.tif
+      channels: 1
+      role: target
+      transform: identity
+      normalization: standard
+      loss: l1
+      regrid_pixels: 5
+      weight: 1.0
+
+model:
+  stem_width: 32
+  width: 64
+  embedding_dim: 64
+  depth: 4
+  decoder_width: 128
+  dropout: 0.05
+
+train:
+  output_dir: ../artifacts/pretrain
+  epochs: 100
+  batch_size: 8
+  learning_rate: 0.0001
+  weight_decay: 0.01
+  warmup_epochs: 5
+  uniformity_weight: 0.05
+  consistency_weight: 0.02
+  source_drop_probability: 0.30
+  grad_clip: 1.0
+  amp: true
+  log_every: 20
+
+downstream:
+  output_dir: ../artifacts/downstream
+  pretrained_checkpoint: ../artifacts/pretrain/best.pt
+  targets: [building, lst, dem, ndvi]
+  freeze_encoder: true
+  epochs: 50
+  batch_size: 8
+  learning_rate: 0.001
+  weight_decay: 0.0001
+  amp: true

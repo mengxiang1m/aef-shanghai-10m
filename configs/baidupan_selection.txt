@@ -1,0 +1,64 @@
+# Baidu Netdisk share: /data
+# Phase 1: download first (~5.0 GB). Keep the directory names if convenient.
+
+# Sentinel-1 input, August 2024 (VV, VH, angle)
+/data/s1/2024/raster/s1_202408_asc171_vv_vh_angle_utm51_10m.tif
+/data/s1/2024/raster/s1_valid_flag_202408_asc171_10m.tif
+/data/s1/2024/metadata/s1_metadata_202408_asc171_10m.csv
+/data/s1/2024/metadata/s1_coverage_summary_202408_asc171_10m.csv
+/data/s1/2024/metadata/s1_processing_report_202408_asc171_10m.csv
+/data/s1/2024/metadata/s1_quality_summary_202408_asc171_10m.csv
+
+# Sentinel-2 input, August 2024
+/data/s2/2024/raster/s2_202408_raw_utm51_10m.tif
+/data/s2/2024/raster/s2_valid_flag_202408_10m.tif
+/data/s2/2024/raster/s2_cloud_suspect_flag_202408_10m.tif
+/data/s2/2024/metadata/s2_metadata_202408_10m.csv
+/data/s2/2024/metadata/s2_coverage_summary_202408_10m.csv
+/data/s2/2024/metadata/s2_processing_report_202408_10m.csv
+/data/s2/2024/metadata/s2_quality_summary_202408_10m.csv
+
+# Reconstruction/downstream targets and validity masks
+/data/building/raster/bldg_mask_20240729.tif
+/data/building/raster/bldg_valid_flag_20240729.tif
+/data/building/metadata/bldg_metadata_20240729.csv
+/data/building/metadata/check_building_rasters_report.csv
+
+/data/dem/raster/dem_elevation_m_2024.tif
+/data/dem/raster/dem_valid_flag_2024.tif
+/data/dem/metadata/dem_metadata_2024.csv
+
+/data/lst/raster/lst_day_mean_2024.tif
+/data/lst/raster/lst_day_valid_flag.tif
+/data/lst/metadata/lst_metadata_2024.csv
+/data/lst/metadata/lst_processing_report_2024.csv
+/data/lst/metadata/lst_quality_summary_2024.csv
+
+# Latest NDVI in this share is 2022; retain its metadata so the time mismatch is explicit.
+/data/ndvi/raster/ndvi_max_2022.tif
+/data/ndvi/raster/ndvi_valid_flag_2022.tif
+/data/ndvi/metadata/ndvi_metadata_2022.csv
+/data/ndvi/metadata/ndvi_coverage_summary_2022.csv
+/data/ndvi/metadata/ndvi_processing_report_2022.csv
+/data/ndvi/metadata/ndvi_quality_summary_2022.csv
+
+# Phase 2: only after Phase 1 passes. Adds matched March/November time points (~6.8 GB).
+/data/s1/2024/raster/s1_202403_asc171_vv_vh_angle_utm51_10m.tif
+/data/s1/2024/raster/s1_valid_flag_202403_asc171_10m.tif
+/data/s1/2024/raster/s1_202411_asc171_vv_vh_angle_utm51_10m.tif
+/data/s1/2024/raster/s1_valid_flag_202411_asc171_10m.tif
+/data/s2/2024/raster/s2_202403_raw_utm51_10m.tif
+/data/s2/2024/raster/s2_valid_flag_202403_10m.tif
+/data/s2/2024/raster/s2_cloud_suspect_flag_202403_10m.tif
+/data/s2/2024/raster/s2_202411_raw_utm51_10m.tif
+/data/s2/2024/raster/s2_valid_flag_202411_10m.tif
+/data/s2/2024/raster/s2_cloud_suspect_flag_202411_10m.tif
+
+# Do not download for the first reproduction:
+# - any *.ovr, *.aux.xml, *.xml, *.vat.*, *.tfw sidecars
+# - other years of S1/S2
+# - bldg_density_1000m_20240729.tif (25.98 GB)
+# - bldg_mean_height_1000m_20240729.tif (21.78 GB)
+# - building height/roof type (possible later downstream tasks)
+# - NDVI years 2000-2021
+# - night LST (possible later second LST channel)
