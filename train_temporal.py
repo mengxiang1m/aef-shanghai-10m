@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import Any
 
 import torch
+from torch.utils.data import DataLoader
 from tqdm import tqdm
 
 from aef.config import load_config
@@ -14,7 +15,23 @@ from aef.data import load_stats
 from aef.losses import batch_uniformity_loss, consistency_loss, reconstruction_loss
 from aef.temporal_data import TemporalShanghaiDataset
 from aef.temporal_model import AEFTemporal, TemporalModelConfig
-from aef.training import make_loader, make_scheduler, save_checkpoint, seed_everything, write_history
+from aef.training import make_scheduler, save_checkpoint, seed_everything, write_history
+
+
+def make_temporal_loader(dataset, batch_size: int, workers: int, shuffle: bool, seed: int) -> DataLoader:
+    """Respawn workers each epoch so dataset.set_epoch changes held-out frames."""
+
+    generator = torch.Generator().manual_seed(seed)
+    return DataLoader(
+        dataset,
+        batch_size=batch_size,
+        shuffle=shuffle,
+        num_workers=workers,
+        pin_memory=torch.cuda.is_available(),
+        persistent_workers=False,
+        drop_last=shuffle and len(dataset) >= batch_size,
+        generator=generator,
+    )
 
 
 def move_batch(value: Any, device: torch.device) -> Any:
@@ -146,14 +163,16 @@ def main() -> None:
     train_set = TemporalShanghaiDataset(config, "train", stats)
     val_set = TemporalShanghaiDataset(config, "val", stats)
     workers = int(config["temporal_data"].get("num_workers", 0))
-    train_loader = make_loader(
+    train_loader = make_temporal_loader(
         train_set,
         int(train_config["batch_size"]),
         workers,
         True,
         int(config.get("seed", 0)),
     )
-    val_loader = make_loader(val_set, int(train_config["batch_size"]), workers, False)
+    val_loader = make_temporal_loader(
+        val_set, int(train_config["batch_size"]), workers, False, int(config.get("seed", 0)) + 1
+    )
 
     allowed = {field.name for field in fields(TemporalModelConfig)}
     model_config = TemporalModelConfig(
