@@ -16,7 +16,7 @@ temporal_data:
   split_ratios: [0.70, 0.15, 0.15]
   # AEF training rows contain every input source before artificial frame dropping.
   require_s2_frames: 2
-  num_workers: 2
+  num_workers: 4
   static_targets:
     building:
       path: building.tif
@@ -62,7 +62,8 @@ temporal_targets:
 temporal_train:
   output_dir: ../artifacts/stp_temporal
   epochs: 50
-  batch_size: 2
+  # Measured at 18.7 GiB peak with the teacher/student branch on a V100S 32 GB.
+  batch_size: 8
   learning_rate: 0.0001
   weight_decay: 0.01
   warmup_epochs: 3

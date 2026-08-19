@@ -28,6 +28,12 @@ reconstruction, passes pixel masks through time/space attention, and conditions 
 on the 2024 valid period. The reshape contract is tested using unique `(b,t,h,w)` token identities;
 no direct `view(BHW,T,C)` is used.
 
+For DM02 transfers, `tools/export_baidu_temporary_dlink.ps1` can create an eight-hour,
+file-scoped URL manifest without exporting account cookies. The server-side
+`tools/download_temporal_from_manifest.py` downloader uses verified 4 MiB ranges because the Baidu
+PCS node rejects larger ranges. Completed ranges survive interruption; regenerate the temporary
+manifest and rerun to resume.
+
 This repository is a practical, lightweight reproduction of the representation-learning idea in
 *AlphaEarth Foundations*. It is not an exact reproduction of Google's unreleased ~480M-parameter
 training system or weights.
