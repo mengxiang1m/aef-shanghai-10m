@@ -41,7 +41,7 @@ foreach ($file in $files) {
     }
 
     Write-Output ("COPY {0} ({1:N2} GiB)" -f $file.Name, ($file.Length / 1GB))
-    & scp -q -o BatchMode=yes -o ConnectTimeout=20 -o ServerAliveInterval=15 -o ServerAliveCountMax=2 -- `
+    & scp -q -C -o BatchMode=yes -o ConnectTimeout=20 -o ServerAliveInterval=15 -o ServerAliveCountMax=2 -- `
         $file.FullName "${RemoteHost}:$remotePath"
     if ($LASTEXITCODE -ne 0) {
         throw "scp failed for $($file.FullName)"
