@@ -19,6 +19,7 @@ python tools/inspect_temporal_data.py data/raw/AEF_STP_temporal_2024
 python tools/compute_temporal_stats.py --windows 256
 pytest -q --basetemp .pytest_tmp_stp
 python train_temporal.py --config configs/shanghai_stp_temporal.yaml --device cuda:1
+python train_temporal_downstream.py --config configs/shanghai_stp_temporal.yaml --device cuda:1
 ```
 
 S2 and the static targets define the canonical grid. S1 is offset by 2 m in Y and is explicitly
@@ -27,6 +28,10 @@ Training retains source-specific asynchronous time axes, removes one valid frame
 reconstruction, passes pixel masks through time/space attention, and conditions the temporal summary
 on the 2024 valid period. The reshape contract is tested using unique `(b,t,h,w)` token identities;
 no direct `view(BHW,T,C)` is used.
+
+The downstream command loads the best temporal checkpoint, supplies all available S1/S2 frames
+(no reconstruction holdout), freezes the STP backbone by default, and fits dense 1x1 linear probes
+for building, LST, DEM, and NDVI.
 
 For DM02 transfers, `tools/export_baidu_temporary_dlink.ps1` can create an eight-hour,
 file-scoped URL manifest without exporting account cookies. The server-side

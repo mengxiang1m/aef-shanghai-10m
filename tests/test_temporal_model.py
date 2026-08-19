@@ -5,6 +5,7 @@ import torch
 from aef.temporal_model import (
     AEFTemporal,
     TemporalModelConfig,
+    TemporalDownstreamModel,
     TemporalSummarizer,
     VMFMeanBottleneck,
     restore_temporal_pixels,
@@ -113,3 +114,11 @@ def test_stp_accepts_asynchronous_source_time_axes_and_returns_dense_embedding()
     assert output["predictions"]["s1"].shape == (2, 3, 32, 32)
     assert output["predictions"]["s2"].shape == (2, 4, 32, 32)
     assert output["predictions"]["building"].shape == (2, 1, 32, 32)
+
+    probe = TemporalDownstreamModel(model, {"building": 1, "dem": 1})
+    probe.set_backbone_frozen(True)
+    probe.train()
+    probe_output = probe(sources, times, valid, period)
+    assert probe_output["predictions"]["building"].shape == (2, 1, 32, 32)
+    assert not probe.backbone.training
+    assert all(not parameter.requires_grad for parameter in probe.backbone.parameters())

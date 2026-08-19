@@ -40,6 +40,14 @@ def resolve_paths(config: dict[str, Any]) -> dict[str, Any]:
         config["temporal_train"]["output_dir"] = resolve(
             config["temporal_train"]["output_dir"]
         )
+    if "temporal_downstream" in config:
+        downstream = config["temporal_downstream"]
+        if "output_dir" in downstream:
+            downstream["output_dir"] = resolve(downstream["output_dir"])
+        if "pretrained_checkpoint" in downstream:
+            downstream["pretrained_checkpoint"] = resolve(
+                downstream["pretrained_checkpoint"]
+            )
     if "downstream" in config and "pretrained_checkpoint" in config["downstream"]:
         config["downstream"]["pretrained_checkpoint"] = resolve(
             config["downstream"]["pretrained_checkpoint"]

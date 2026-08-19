@@ -114,7 +114,13 @@ def _normalize(
 class TemporalShanghaiDataset(Dataset):
     """Windowed S1/S2 sequences with source-wise held-out reconstruction frames."""
 
-    def __init__(self, config: dict[str, Any], split: str, stats: dict[str, Any]):
+    def __init__(
+        self,
+        config: dict[str, Any],
+        split: str,
+        stats: dict[str, Any],
+        hold_out_frames: bool = True,
+    ):
         import rasterio
 
         self.config = config
@@ -126,6 +132,7 @@ class TemporalShanghaiDataset(Dataset):
         self.base_seed = int(config.get("seed", 0))
         self.epoch = 0
         self.stats = stats
+        self.hold_out_frames = bool(hold_out_frames)
 
         canonical_path = self.static_root / data.get("canonical_raster", "S2.tif")
         with rasterio.open(canonical_path) as canonical:
@@ -313,14 +320,15 @@ class TemporalShanghaiDataset(Dataset):
 
         for name in ("s1", "s2"):
             sequence, valid = self._read_sequence(name, window)
-            held_out = self._choose_held_out(valid, index, name)
-            targets[name] = torch.from_numpy(sequence[held_out].copy())
-            masks[name] = torch.from_numpy(
-                np.broadcast_to(valid[held_out][None], sequence[held_out].shape).copy()
-            )
-            target_times[name] = torch.tensor(self.source_times[name][held_out])
-            sequence[held_out] = 0
-            valid[held_out] = False
+            if self.hold_out_frames:
+                held_out = self._choose_held_out(valid, index, name)
+                targets[name] = torch.from_numpy(sequence[held_out].copy())
+                masks[name] = torch.from_numpy(
+                    np.broadcast_to(valid[held_out][None], sequence[held_out].shape).copy()
+                )
+                target_times[name] = torch.tensor(self.source_times[name][held_out])
+                sequence[held_out] = 0
+                valid[held_out] = False
             sources[name] = torch.from_numpy(sequence)
             source_valid[name] = torch.from_numpy(valid)
             source_times[name] = torch.from_numpy(self.source_times[name].copy())

@@ -518,3 +518,48 @@ class AEFTemporal(nn.Module):
             "reconstruction_latent": reconstruction_latent,
             "predictions": self.decode(reconstruction_latent, valid_period, target_times),
         }
+
+
+class TemporalDownstreamModel(nn.Module):
+    """Dense linear probes over valid-period-conditioned AEFTemporal mean embeddings."""
+
+    def __init__(self, backbone: AEFTemporal, target_channels: Mapping[str, int]):
+        super().__init__()
+        self.backbone = backbone
+        embedding_dim = backbone.bottleneck.mean.out_channels
+        self.heads = nn.ModuleDict(
+            {name: nn.Conv2d(embedding_dim, channels, 1) for name, channels in target_channels.items()}
+        )
+        self.backbone_frozen = False
+
+    def set_backbone_frozen(self, frozen: bool) -> None:
+        self.backbone_frozen = bool(frozen)
+        for parameter in self.backbone.parameters():
+            parameter.requires_grad = not frozen
+        if frozen:
+            self.backbone.eval()
+
+    def train(self, mode: bool = True):
+        super().train(mode)
+        if self.backbone_frozen:
+            self.backbone.eval()
+        return self
+
+    def forward(
+        self,
+        sources: Mapping[str, torch.Tensor],
+        source_times: Mapping[str, torch.Tensor],
+        source_valid: Mapping[str, torch.Tensor],
+        valid_period: torch.Tensor,
+    ) -> dict[str, object]:
+        if self.backbone_frozen:
+            with torch.no_grad():
+                embedding = self.backbone.encode(
+                    sources, source_times, source_valid, valid_period
+                )
+        else:
+            embedding = self.backbone.encode(sources, source_times, source_valid, valid_period)
+        return {
+            "embedding": embedding,
+            "predictions": {name: head(embedding) for name, head in self.heads.items()},
+        }
