@@ -27,9 +27,19 @@ def resolve_paths(config: dict[str, Any]) -> dict[str, Any]:
     data = config["data"]
     data["root"] = resolve(data["root"])
     data["stats_file"] = resolve(data["stats_file"])
+    if "base_stats_file" in data:
+        data["base_stats_file"] = resolve(data["base_stats_file"])
+    if "temporal_data" in config:
+        temporal = config["temporal_data"]
+        temporal["temporal_root"] = resolve(temporal["temporal_root"])
+        temporal["static_root"] = resolve(temporal["static_root"])
     for section in ("train", "downstream"):
         if section in config and "output_dir" in config[section]:
             config[section]["output_dir"] = resolve(config[section]["output_dir"])
+    if "temporal_train" in config and "output_dir" in config["temporal_train"]:
+        config["temporal_train"]["output_dir"] = resolve(
+            config["temporal_train"]["output_dir"]
+        )
     if "downstream" in config and "pretrained_checkpoint" in config["downstream"]:
         config["downstream"]["pretrained_checkpoint"] = resolve(
             config["downstream"]["pretrained_checkpoint"]
@@ -54,4 +64,3 @@ def target_specs(config: dict[str, Any], names: list[str] | None = None) -> dict
     if names is not None:
         result = {name: result[name] for name in names}
     return result
-

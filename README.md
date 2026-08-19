@@ -1,5 +1,33 @@
 # Shanghai 10 m AEF-Lite reproduction
 
+> **Status:** the original `AEFLite` checkpoint below is a static CNN baseline, not an STP
+> reproduction. The repository now also contains a separate, paper-aligned temporal path in
+> `src/aef/temporal_model.py`: source projectors, L/2 precision, L/8 time, L/16 space operators,
+> learned pyramid exchanges, valid-period-conditioned `TemporalSummarizer`, a dense S63 mean
+> direction bottleneck, and conditional decoders. The temporal path is a resource-scaled
+> reproduction of the published topology; it is not Google's unreleased 480M-parameter model.
+
+## Temporal STP run
+
+Put the verified 48-file temporal download at
+`data/raw/AEF_STP_temporal_2024/`. It contains 12 S1 months and three S2 months plus validity,
+cloud, and metadata files. Validate and train with:
+
+```powershell
+$env:PYTHONPATH="$PWD/.runtime_geo;$PWD/src"
+python tools/inspect_temporal_data.py data/raw/AEF_STP_temporal_2024
+python tools/compute_temporal_stats.py --windows 256
+pytest -q --basetemp .pytest_tmp_stp
+python train_temporal.py --config configs/shanghai_stp_temporal.yaml --device cuda:1
+```
+
+S2 and the static targets define the canonical grid. S1 is offset by 2 m in Y and is explicitly
+regridded window-by-window with bilinear data resampling and nearest-neighbour validity resampling.
+Training retains source-specific asynchronous time axes, removes one valid frame per source for
+reconstruction, passes pixel masks through time/space attention, and conditions the temporal summary
+on the 2024 valid period. The reshape contract is tested using unique `(b,t,h,w)` token identities;
+no direct `view(BHW,T,C)` is used.
+
 This repository is a practical, lightweight reproduction of the representation-learning idea in
 *AlphaEarth Foundations*. It is not an exact reproduction of Google's unreleased ~480M-parameter
 training system or weights.
@@ -95,12 +123,13 @@ python train_pretrain.py --config configs/shanghai_10m.yaml --device cpu --epoch
   --output-dir artifacts/pretrain_cpu_stage1
 ```
 
-The implemented static-composite approximation retains the paper's spatially dense 64-dimensional
+The original static-composite approximation retains the paper's spatially dense 64-dimensional
 unit-sphere bottleneck, per-source implicit decoders, dense batch-rotation uniformity objective,
 source-specific reconstruction losses, and a shared-parameter teacher/student consistency pass that
 randomly drops S1 while retaining S2. The supplied dataset has only one composite per input sensor,
 so timestamp-conditioned decoding, frame holdout/dropout, VMF sampling, text alignment, and the
-full temporal STP architecture cannot be reproduced from this Phase 1 data alone.
+full temporal STP architecture cannot be reproduced from the Phase 1 data alone. Use the temporal
+configuration above for the new multi-frame implementation.
 
 ## Model checkpoints
 

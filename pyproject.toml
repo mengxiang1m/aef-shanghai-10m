@@ -8,6 +8,7 @@ version = "0.1.0"
 description = "A lightweight AlphaEarth Foundations inspired workflow for aligned 10 m Shanghai rasters"
 requires-python = ">=3.10"
 dependencies = [
+  "einops>=0.7",
   "numpy>=1.24",
   "PyYAML>=6.0",
   "torch>=2.1",
@@ -24,4 +25,3 @@ where = ["src"]
 [tool.pytest.ini_options]
 pythonpath = ["src"]
 testpaths = ["tests"]
-

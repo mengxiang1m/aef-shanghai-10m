@@ -1,5 +1,20 @@
 # AEF-Lite Shanghai 10 m model card
 
+## Model-family clarification
+
+There are now two deliberately separate model families in this repository:
+
+- `AEFLite` is the completed static-composite CNN baseline whose results and checksums are recorded
+  below. Its weights must not be described as an AEF/STP reproduction.
+- `AEFTemporal` is the new resource-scaled implementation of the paper's STP topology and temporal
+  training method. It consumes 12 monthly S1 frames and three S2 frames on independent time axes,
+  uses masked temporal summarization, and reconstructs truly held-out frames plus the four static
+  targets. Its checkpoint is written to `artifacts/stp_temporal/` once training completes.
+
+Google's production architecture, data mixture, exact VMF sampler, text model, and weights are not
+public. Accordingly, `AEFTemporal` is a method/topology reproduction on Shanghai data, not an exact
+production-model reproduction.
+
 ## Scope
 
 This project is a data-constrained, static-composite reproduction of the representation-learning

@@ -1,0 +1,74 @@
+seed: 42
+
+# Kept for the shared config/statistics loader.
+data:
+  root: ../data/shanghai_10m
+  stats_file: ../artifacts/shanghai_temporal_stats.json
+  base_stats_file: ../artifacts/shanghai_stats.json
+
+temporal_data:
+  temporal_root: ../data/raw/AEF_STP_temporal_2024
+  static_root: ../data/shanghai_10m
+  canonical_raster: S2.tif
+  patch_size: 128
+  stride: 128
+  split_block_size: 1024
+  split_ratios: [0.70, 0.15, 0.15]
+  # AEF training rows contain every input source before artificial frame dropping.
+  require_s2_frames: 2
+  num_workers: 2
+  static_targets:
+    building:
+      path: building.tif
+      channels: 1
+      transform: identity
+      normalization: none
+    lst:
+      path: LST.tif
+      channels: 1
+      transform: identity
+      normalization: standard
+    dem:
+      path: DEM.tif
+      channels: 1
+      transform: identity
+      normalization: standard
+    ndvi:
+      path: NDVI.tif
+      channels: 1
+      transform: identity
+      normalization: standard
+
+temporal_model:
+  precision_dim: 64
+  time_dim: 128
+  space_dim: 192
+  depth: 4
+  time_heads: 4
+  space_heads: 6
+  embedding_dim: 64
+  decoder_width: 128
+  dropout: 0.05
+  concentration: 8000.0
+
+temporal_targets:
+  s1: {channels: 3, loss: l1, shift_pixels: 2, weight: 1.0}
+  s2: {channels: 4, loss: l1, shift_pixels: 2, weight: 1.0}
+  building: {channels: 1, loss: balanced_bce, weight: 1.0}
+  lst: {channels: 1, loss: l1, regrid_pixels: 100, weight: 1.0}
+  dem: {channels: 1, loss: l1, weight: 1.0}
+  ndvi: {channels: 1, loss: l1, regrid_pixels: 5, weight: 1.0}
+
+temporal_train:
+  output_dir: ../artifacts/stp_temporal
+  epochs: 50
+  batch_size: 2
+  learning_rate: 0.0001
+  weight_decay: 0.01
+  warmup_epochs: 3
+  uniformity_weight: 0.05
+  consistency_weight: 0.05
+  frame_drop_probability: 0.30
+  grad_clip: 1.0
+  amp: true
+  validation_batches: 64

@@ -4,10 +4,12 @@ __pycache__/
 .pytest_tmp*/
 .pytest_*/
 .deps/
+.runtime_geo/
 .tmp_pip/
 .paper_extract.txt
 *.egg-info/
 artifacts/*
+!artifacts/shanghai_temporal_stats.json
 !artifacts/downstream_dm02/
 artifacts/downstream_dm02/*
 !artifacts/downstream_dm02/best.pt
