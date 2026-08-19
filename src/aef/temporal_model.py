@@ -375,13 +375,19 @@ class VMFMeanBottleneck(nn.Module):
         self.mean = nn.Conv2d(input_dim, embedding_dim, 1)
         self.concentration = float(concentration)
 
+    def mean_direction(self, features: torch.Tensor) -> torch.Tensor:
+        return F.normalize(self.mean(features), dim=1, eps=1e-6)
+
+    def sample(self, mean: torch.Tensor) -> torch.Tensor:
+        """High-concentration tangent-normal approximation to a VMF sample."""
+
+        noise = torch.randn_like(mean) / math.sqrt(self.concentration)
+        noise = noise - (noise * mean).sum(dim=1, keepdim=True) * mean
+        return F.normalize(mean + noise, dim=1, eps=1e-6)
+
     def forward(self, features: torch.Tensor, sample: bool = False) -> torch.Tensor:
-        mean = F.normalize(self.mean(features), dim=1, eps=1e-6)
-        if sample and self.training:
-            noise = torch.randn_like(mean) / math.sqrt(self.concentration)
-            noise = noise - (noise * mean).sum(dim=1, keepdim=True) * mean
-            return F.normalize(mean + noise, dim=1, eps=1e-6)
-        return mean
+        mean = self.mean_direction(features)
+        return self.sample(mean) if sample and self.training else mean
 
 
 class ConditionalDecoder(nn.Module):
@@ -443,7 +449,10 @@ class AEFTemporal(nn.Module):
             config.precision_dim, config.embedding_dim, config.concentration
         )
         condition_dim = 32
-        self.decoder_time_code = SinusoidalTimeCode(condition_dim)
+        # Decoder time is normalized to [0,1), unlike encoder time measured in days.
+        self.decoder_time_code = SinusoidalTimeCode(
+            condition_dim, min_period_days=1.0 / 365.0, max_period_days=1.0
+        )
         self.decoders = nn.ModuleDict(
             {
                 name: ConditionalDecoder(
@@ -464,6 +473,20 @@ class AEFTemporal(nn.Module):
         sequence, times, valid = self.encoder(sources, source_times, source_valid)
         summary = self.summarizer(sequence, times, valid, valid_period)
         return self.bottleneck(self.upsample(summary), sample=sample_bottleneck)
+
+    def encode_mean_and_sample(
+        self,
+        sources: Mapping[str, torch.Tensor],
+        source_times: Mapping[str, torch.Tensor],
+        source_valid: Mapping[str, torch.Tensor],
+        valid_period: torch.Tensor,
+    ) -> tuple[torch.Tensor, torch.Tensor]:
+        sequence, times, valid = self.encoder(sources, source_times, source_valid)
+        summary = self.summarizer(sequence, times, valid, valid_period)
+        features = self.upsample(summary)
+        mean = self.bottleneck.mean_direction(features)
+        sample = self.bottleneck.sample(mean) if self.training else mean
+        return mean, sample
 
     def decode(
         self,
@@ -487,8 +510,11 @@ class AEFTemporal(nn.Module):
         valid_period: torch.Tensor,
         target_times: Mapping[str, torch.Tensor],
     ) -> dict[str, object]:
-        embedding = self.encode(sources, source_times, source_valid, valid_period)
+        embedding, reconstruction_latent = self.encode_mean_and_sample(
+            sources, source_times, source_valid, valid_period
+        )
         return {
             "embedding": embedding,
-            "predictions": self.decode(embedding, valid_period, target_times),
+            "reconstruction_latent": reconstruction_latent,
+            "predictions": self.decode(reconstruction_latent, valid_period, target_times),
         }

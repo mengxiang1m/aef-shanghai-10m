@@ -6,9 +6,21 @@ from aef.temporal_model import (
     AEFTemporal,
     TemporalModelConfig,
     TemporalSummarizer,
+    VMFMeanBottleneck,
     restore_temporal_pixels,
     temporal_pixel_tokens,
 )
+
+
+def test_vmf_bottleneck_separates_mean_direction_from_training_sample():
+    torch.manual_seed(11)
+    bottleneck = VMFMeanBottleneck(8, embedding_dim=64, concentration=8000.0).train()
+    features = torch.randn(2, 8, 4, 4)
+    mean = bottleneck.mean_direction(features)
+    sample = bottleneck.sample(mean)
+    assert torch.allclose(torch.linalg.vector_norm(mean, dim=1), torch.ones(2, 4, 4), atol=1e-5)
+    assert torch.allclose(torch.linalg.vector_norm(sample, dim=1), torch.ones(2, 4, 4), atol=1e-5)
+    assert not torch.equal(mean, sample)
 
 
 def test_temporal_token_rearrange_never_mixes_pixels_and_time():
