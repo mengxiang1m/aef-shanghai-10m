@@ -20,6 +20,8 @@ python tools/compute_temporal_stats.py --windows 256
 pytest -q --basetemp .pytest_tmp_stp
 python train_temporal.py --config configs/shanghai_stp_temporal.yaml --device cuda:1
 python train_temporal_downstream.py --config configs/shanghai_stp_temporal.yaml --device cuda:1
+python evaluate_temporal_downstream.py --config configs/shanghai_stp_temporal.yaml `
+  --checkpoint artifacts/stp_temporal_downstream/best.pt --device cuda:1
 ```
 
 S2 and the static targets define the canonical grid. S1 is offset by 2 m in Y and is explicitly
@@ -31,7 +33,9 @@ no direct `view(BHW,T,C)` is used.
 
 The downstream command loads the best temporal checkpoint, supplies all available S1/S2 frames
 (no reconstruction holdout), freezes the STP backbone by default, and fits dense 1x1 linear probes
-for building, LST, DEM, and NDVI.
+for building, LST, DEM, and NDVI. The evaluation command uses the independent spatial test split
+and reports building IoU/F1/balanced accuracy plus physical-scale MAE, RMSE, and R2 for the three
+continuous targets.
 
 For DM02 transfers, `tools/export_baidu_temporary_dlink.ps1` can create an eight-hour,
 file-scoped URL manifest without exporting account cookies. The server-side
