@@ -37,6 +37,11 @@ for building, LST, DEM, and NDVI. The evaluation command uses the independent sp
 and reports building IoU/F1/balanced accuracy plus physical-scale MAE, RMSE, and R2 for the three
 continuous targets.
 
+The completed Shanghai run selected pretraining epoch 27 and downstream epoch 11. On 733 held-out
+spatial test patches it reached building balanced accuracy 0.8301 / IoU 0.2826, LST R2 0.1779, DEM
+R2 0.6176, and NDVI R2 0.7959. Inference checkpoints and exact metric/history files are available in
+the [`stp-temporal-shanghai-v1` release](https://github.com/mengxiang1m/aef-shanghai-10m/releases/tag/stp-temporal-shanghai-v1).
+
 For DM02 transfers, `tools/export_baidu_temporary_dlink.ps1` can create an eight-hour,
 file-scoped URL manifest without exporting account cookies. The server-side
 `tools/download_temporal_from_manifest.py` downloader uses verified 4 MiB ranges because the Baidu

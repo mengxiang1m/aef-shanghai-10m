@@ -45,6 +45,37 @@ attention, timestamp-conditioned decoding, VMF sampling, held-out temporal frame
 - Shared-parameter teacher/student consistency with random S1 source dropout, weight 0.02.
 - Frozen-encoder pointwise linear probes for building, LST, DEM, and NDVI.
 
+## Temporal STP checkpoints
+
+The resource-scaled temporal model was trained on DM02 using a Tesla V100S 32 GB. Pretraining ran
+for 50 epochs over 2,714 spatial training patches; the selected representation checkpoint is epoch
+27 with validation reconstruction loss 0.376224. Frozen dense linear probes ran for 30 epochs and
+selected epoch 11 with validation loss 0.349505. The spatial split contains 733 validation and 733
+test patches, and all available input frames are supplied to the probes without reconstruction
+holdout.
+
+Full independent test-split results:
+
+| Target | MAE | RMSE | R2 | Classification metrics |
+|---|---:|---:|---:|---|
+| Building | - | - | - | balanced accuracy 0.8301; IoU 0.2826; F1 0.4407 |
+| LST | 0.5412 | 0.6972 | 0.1779 | - |
+| DEM | 0.7628 m | 1.0826 m | 0.6176 | - |
+| NDVI | 0.0678 | 0.0940 | 0.7959 | - |
+
+Inference-only weights and the metric/history files are published in the
+[`stp-temporal-shanghai-v1` release](https://github.com/mengxiang1m/aef-shanghai-10m/releases/tag/stp-temporal-shanghai-v1).
+The full optimizer checkpoints remain on DM02 for resuming training.
+
+SHA-256 checksums:
+
+- `stp_temporal_best_inference.pt`: `c9f1f7534cf1aeb2cc181bfce7d8a797fd77f88066942bb6cfd99f69dc77d02f`
+- `stp_temporal_downstream_best_inference.pt`: `71ab2b1c6a29815d1e70698233861536132932bd9b03aef07c2bb007d274668c`
+- `stp_temporal_test_metrics.json`: `f56ff0267d4ff9c22fe8809c4505e1dbf9774baacb8870aeb3d3fc73a5c34099`
+
+These results validate the implemented STP/TemporalSummarizer representation-learning path on the
+available Shanghai data. They are not benchmark numbers for Google's unreleased production model.
+
 ## DM02 final checkpoints
 
 The recommended checkpoints were trained on a Tesla V100S 32 GB. Pretraining resumed from the CPU
